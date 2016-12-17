@@ -12,6 +12,10 @@ namespace MysqlDumps
     {
         public static MySqlConnection connection;
 
+        public static MySqlCommand command;
+
+        public static MySqlDataReader reader;
+
         public static MySqlConnectionStringBuilder builder = new MySqlConnectionStringBuilder();
 
 
@@ -27,24 +31,26 @@ namespace MysqlDumps
 
                 builder.Password = password;
 
-                connection = new MySqlConnection(builder.GetConnectionString(true));
-
-                connection.Open();
-
-                MySqlCommand command = connection.CreateCommand();
-
-                command.CommandText = "show databases; ";
-
-                MySqlDataReader reader = command.ExecuteReader();
-
                 List<string> databases = new List<string>();
 
-                while (reader.Read())
+                using (connection = new MySqlConnection(builder.GetConnectionString(true)))
                 {
-                    databases.Add(reader["Database"].ToString());
-                }
+                    using (command = connection.CreateCommand())
+                    {
+                        command.CommandText = "show databases; ";
 
-                connection.Close();
+                        connection.Open();
+
+                        using (reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                databases.Add(reader["Database"].ToString());
+                            }
+                        }
+                    }
+
+                }
 
                 return databases;
 
@@ -70,24 +76,26 @@ namespace MysqlDumps
 
                 builder.Database = database;
 
-                connection = new MySqlConnection(builder.GetConnectionString(true));
-
-                connection.Open();
-
-                MySqlCommand command = connection.CreateCommand();
-
-                command.CommandText = "show tables; ";
-
-                MySqlDataReader reader = command.ExecuteReader();
-
                 List<string> tables = new List<string>();
-
-                while (reader.Read())
+                
+                using (connection = new MySqlConnection(builder.GetConnectionString(true)))
                 {
-                    tables.Add(reader["Tables_in_" + database].ToString());
-                }
+                    using (command = connection.CreateCommand())
+                    {
+                        command.CommandText = "show tables; ";
 
-                connection.Close();
+                        connection.Open();
+
+                        using (reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                tables.Add(reader["Tables_in_" + database].ToString());
+                            }
+                        }
+
+                    }
+                }
 
                 return tables;
 
